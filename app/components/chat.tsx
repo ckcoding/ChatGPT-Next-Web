@@ -294,8 +294,8 @@ function ChatAction(props: {
   const iconRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState({
-    full: 20,
-    icon: 20,
+    full: 16,
+    icon: 16,
   });
 
   function updateWidth() {
@@ -309,10 +309,6 @@ function ChatAction(props: {
     });
   }
 
-  useEffect(() => {
-    setTimeout(updateWidth, 100);
-  }, []);
-
   return (
     <div
       className={`${styles["chat-input-action"]} clickable`}
@@ -320,6 +316,8 @@ function ChatAction(props: {
         props.onClick();
         setTimeout(updateWidth, 1);
       }}
+      onMouseEnter={updateWidth}
+      onTouchStart={updateWidth}
       style={
         {
           "--icon-width": `${width.icon}px`,
@@ -515,14 +513,6 @@ export function Chat() {
     { leading: true, trailing: true },
   );
 
-  const onPromptSelect = (prompt: Prompt) => {
-    setTimeout(() => {
-      setPromptHints([]);
-      setUserInput(prompt.content);
-      inputRef.current?.focus();
-    }, 30);
-  };
-
   // auto grow input
   const [inputRows, setInputRows] = useState(2);
   const measure = useDebouncedCallback(
@@ -593,6 +583,23 @@ export function Chat() {
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
     setAutoScroll(true);
+  };
+
+  const onPromptSelect = (prompt: Prompt) => {
+    setTimeout(() => {
+      setPromptHints([]);
+
+      const matchedChatCommand = chatCommands.match(prompt.content);
+      if (matchedChatCommand.matched) {
+        // if user is selecting a chat command, just trigger it
+        matchedChatCommand.invoke();
+        setUserInput("");
+      } else {
+        // or fill the prompt
+        setUserInput(prompt.content);
+      }
+      inputRef.current?.focus();
+    }, 30);
   };
 
   // stop response
